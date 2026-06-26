@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: bill-organizer-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node backend/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BACKEND_PORT
+        value: 10000
+      - key: SUPABASE_URL
+        fromEnv: SUPABASE_URL
+      - key: SUPABASE_ANON_KEY
+        fromEnv: SUPABASE_ANON_KEY
+      - key: GEMINI_API_KEY
+        fromEnv: GEMINI_API_KEY
