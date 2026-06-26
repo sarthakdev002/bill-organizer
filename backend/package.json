@@ -1,0 +1,17 @@
+{
+  "name": "bill-organizer-backend",
+  "version": "1.0.0",
+  "description": "Backend for Bill Organizer App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "body-parser": "^2.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "node-fetch": "^2.7.0",
+    "@supabase/supabase-js": "^2.108.2"
+  }
+}

@@ -10,7 +10,10 @@ const { findBestMatch, applyMatchToBill } = require('./services/paymentMatcher')
 
 // Load environment variables
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+const envPath = process.env.NODE_ENV === 'production' 
+  ? path.resolve(__dirname, '.env') 
+  : path.resolve(__dirname, '../.env.local');
+require('dotenv').config({ path: envPath });
 
 const app = express();
 app.use(cors());
@@ -21,7 +24,7 @@ app.use(bodyParser.urlencoded({ limit: '150mb', extended: true }));
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyB98W39PpNXcHGwbg5Yk9_UYcMim9YqFYI';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-const PORT = process.env.BACKEND_PORT || 5000;
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 5000;
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
 
 // Supabase admin client for server-side operations (webhook, matching)

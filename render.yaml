@@ -3,12 +3,13 @@ services:
     name: bill-organizer-backend
     env: node
     plan: free
+    rootDir: backend
     buildCommand: npm install
-    startCommand: node backend/server.js
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: BACKEND_PORT
+      - key: PORT
         value: 10000
       - key: SUPABASE_URL
         fromEnv: SUPABASE_URL
