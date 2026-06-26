@@ -10,10 +10,11 @@ const { findBestMatch, applyMatchToBill } = require('./services/paymentMatcher')
 
 // Load environment variables
 const path = require('path');
-const envPath = process.env.NODE_ENV === 'production' 
-  ? path.resolve(__dirname, '.env') 
-  : path.resolve(__dirname, '../.env.local');
-require('dotenv').config({ path: envPath });
+if (process.env.NODE_ENV !== 'production') {
+  // Only load from .env.local in development
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+}
+// In production, Render sets environment variables directly
 
 const app = express();
 app.use(cors());
