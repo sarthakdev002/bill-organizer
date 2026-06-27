@@ -352,6 +352,8 @@ export default function CameraScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) throw new Error('User not authenticated');
 
+      console.log('[saveBill] Saving bill:', { photoUri, ocrData, enrichmentData, userId: session.user.id });
+
       // -- Payment Slip flow - smart confidence-based matching ------------------
       if (ocrData.type === 'payment_slip') {
         const result = await handlePaymentSlip(
@@ -390,6 +392,8 @@ export default function CameraScreen() {
       }
 
       // -- Normal bill save -------------------------------------------------------
+      console.log('[saveBill] Inserting bill into Supabase with category:', ocrData.category || 'Others');
+      
       const { data: bill, error: billError } = await supabase
         .from('bills')
         .insert({
@@ -415,7 +419,12 @@ export default function CameraScreen() {
         .select()
         .single();
 
-      if (billError) throw billError;
+      if (billError) {
+        console.error('[saveBill] Error inserting bill:', billError);
+        throw billError;
+      }
+      
+      console.log('[saveBill] Bill saved successfully:', bill);
 
       // Save line items
       if (ocrData.items && ocrData.items.length > 0) {
@@ -625,18 +634,34 @@ export default function CameraScreen() {
     setLoadingText('Saving Product...');
 
     try {
-      // Map live lens categories to budget categories
+      console.log('[LiveLens Save] Live result:', liveResult);
+      
+      // Map live lens categories to budget categories (case-insensitive)
       const categoryMap: Record<string, string> = {
-        'Home & Kitchen': 'Shopping',
-        'Electronics': 'Shopping',
-        'Grocery': 'Food',
-        'Food': 'Food',
-        'Fashion': 'Shopping',
-        'Shopping': 'Shopping',
-        'Others': 'Others'
+        'home & kitchen': 'Shopping',
+        'electronics': 'Shopping',
+        'grocery': 'Food',
+        'groceries': 'Food',
+        'food': 'Food',
+        'food & dining': 'Food',
+        'fashion': 'Shopping',
+        'clothing': 'Shopping',
+        'shopping': 'Shopping',
+        'electricity': 'Electricity',
+        'water': 'Water',
+        'rent': 'Rent',
+        'internet': 'Internet',
+        'entertainment': 'Entertainment',
+        'medical': 'Medical',
+        'health': 'Medical',
+        'travel': 'Travel',
+        'others': 'Others',
+        'other': 'Others'
       };
       
-      const mappedCategory = categoryMap[liveResult.category] || 'Shopping';
+      const normalizedCategory = liveResult.category ? liveResult.category.toLowerCase().trim() : '';
+      const mappedCategory = categoryMap[normalizedCategory] || 'Shopping';
+      console.log('[LiveLens Save] Normalized category:', normalizedCategory, '→ Mapped category:', mappedCategory);
       
       const ocrData = {
         category: mappedCategory,
