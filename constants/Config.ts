@@ -4,7 +4,7 @@
  */
 export const Config = {
     // Deployed backend URL
-    BACKEND_URL: 'https://bill-organizer-1.onrender.com',
+    BACKEND_URL: 'https://bill-organizer-backend-1.onrender.com',
 };
 
 export default Config;

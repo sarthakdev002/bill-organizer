@@ -625,8 +625,21 @@ export default function CameraScreen() {
     setLoadingText('Saving Product...');
 
     try {
+      // Map live lens categories to budget categories
+      const categoryMap: Record<string, string> = {
+        'Home & Kitchen': 'Shopping',
+        'Electronics': 'Shopping',
+        'Grocery': 'Food',
+        'Food': 'Food',
+        'Fashion': 'Shopping',
+        'Shopping': 'Shopping',
+        'Others': 'Others'
+      };
+      
+      const mappedCategory = categoryMap[liveResult.category] || 'Shopping';
+      
       const ocrData = {
-        category: liveResult.category || 'Shopping',
+        category: mappedCategory,
         amount: liveResult.price || 0,
         merchant_name: liveResult.brand || liveResult.product_name,
         type: 'bill',
@@ -641,7 +654,21 @@ export default function CameraScreen() {
       const saved = await saveBill('', ocrData, { source: 'live_lens' });
       if (saved) {
         const itemDtl = `${liveResult.brand && liveResult.brand !== 'Unknown' ? liveResult.brand + ' ' : ''}${liveResult.product_name}`;
-        showAlert('✨ Success', `${itemDtl} was added to your expenses.\n\nEstimated Price: 💰 Rs. ${liveResult.price?.toLocaleString('en-IN')}\nCategory: ${liveResult.category}`);
+        
+        // Budget Monitoring Check - same as normal bill save!
+        if (notificationPermission && session?.user) {
+          try {
+            const budget = await BudgetStorage.getBudgetByCategory(session.user.id, ocrData.category);
+            if (budget) {
+              const spent = await BudgetCalculator.getCategorySpending(session.user.id, budget);
+              await BudgetNotificationService.checkBudgetAlerts(session.user.id, ocrData.category, spent, budget);
+            }
+          } catch (budgetError) {
+            console.error('Budget check failed:', budgetError);
+          }
+        }
+        
+        showAlert('✨ Success', `${itemDtl} was added to your expenses.\n\nEstimated Price: 💰 Rs. ${liveResult.price?.toLocaleString('en-IN')}\nCategory: ${mappedCategory}`);
         setIsLiveMode(false);
       }
     } catch (e: any) {

@@ -1475,7 +1475,7 @@ app.post('/api/live-lens', async (req, res) => {
       "identified": true,
       "product_name": "Exact product name or generic description (e.g., 'Steel Tiffin Box', 'Plastic Bottle')",
       "brand": "Primary/Main brand name of the business (e.g., 'McDonald's', 'Apple', 'Airtel') or 'Generic/Unknown'",
-      "category": "Home & Kitchen or Electronics or Grocery or Food or Fashion or Others",
+      "category": "Food or Electricity or Water or Rent or Internet or Shopping or Entertainment or Medical or Travel or Others",
       "estimated_price": 999,
       "market_verdict": "One sentence on whether this is a typical price limit in India",
       "price_comparisons": [

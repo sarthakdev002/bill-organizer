@@ -24,7 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_bills_payment_date
 -- Logs every match attempt — who matched what, when, how confident
 CREATE TABLE IF NOT EXISTS public.payment_reconciliations (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  bill_id          BIGINT REFERENCES public.bills(id) ON DELETE CASCADE,
+  bill_id          UUID REFERENCES public.bills(id) ON DELETE CASCADE,
   user_id          UUID NOT NULL,
   matched_at       TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   match_method     VARCHAR(20) NOT NULL,  -- 'ocr_auto','ocr_manual','webhook','manual'
