@@ -17,38 +17,67 @@ export class BudgetCalculator {
         return [];
       }
 
+      console.log('[BudgetCalculator] Calculating category spending:', { userId, budgetsCount: budgets.length, allBillsCount: allBills?.length || 0 });
+      console.log('[BudgetCalculator] All bills:', allBills);
+
       const results: CategorySpending[] = [];
 
       for (const budget of budgets) {
-        // Range selection
-        const start = budget.start_date ? new Date(budget.start_date) : this.getMonthlyDateRange().startDate;
-        const end = budget.end_date ? new Date(budget.end_date) : this.getMonthlyDateRange().endDate;
+        // Range selection (convert to UTC)
+        const getUTCDate = (dateStr: string | undefined): Date => {
+          if (!dateStr) return new Date(0);
+          const date = new Date(dateStr);
+          return new Date(Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            date.getUTCHours(),
+            date.getUTCMinutes(),
+            date.getUTCSeconds(),
+            date.getUTCMilliseconds()
+          ));
+        };
+        const start = budget.start_date ? getUTCDate(budget.start_date) : this.getMonthlyDateRange().startDate;
+        const end = budget.end_date ? getUTCDate(budget.end_date) : this.getMonthlyDateRange().endDate;
+
+        console.log(`[BudgetCalculator] Budget: ${budget.category}, amount: ${budget.amount}, start: ${start.toISOString()}, end: ${end.toISOString()}`);
 
         let spent = 0;
 
         if (allBills) {
-          // Helper to get the most relevant date for a bill
+          // Helper to get the most relevant date for a bill (converted to UTC)
           const getBillDate = (b: any) => {
             const dateStr = b.payment_timestamp || b.created_at || b.invoice_date;
-            return dateStr ? new Date(dateStr) : new Date(0);
+            if (!dateStr) return new Date(0);
+            const date = new Date(dateStr);
+            // Convert to UTC by creating a new Date with the UTC components
+            return new Date(Date.UTC(
+              date.getUTCFullYear(),
+              date.getUTCMonth(),
+              date.getUTCDate(),
+              date.getUTCHours(),
+              date.getUTCMinutes(),
+              date.getUTCSeconds(),
+              date.getUTCMilliseconds()
+            ));
           };
 
           // OPTIMIZATION: Filter local bills instead of querying DB
-          spent = allBills
-            .filter(bill => {
-              const bDate = getBillDate(bill);
-              return (
-                bill.category === budget.category &&
-                bDate >= start &&
-                bDate <= end
-              );
-            })
-            .reduce((acc, bill) => acc + parseFloat(bill.amount?.toString() || '0'), 0);
+          const filteredBills = allBills.filter(bill => {
+            const bDate = getBillDate(bill);
+            const isCategoryMatch = bill.category === budget.category;
+            const isDateMatch = bDate >= start && bDate <= end;
+            console.log(`[BudgetCalculator] Checking bill: ${bill.id}, category: ${bill.category}, amount: ${bill.amount}, date: ${bDate.toISOString()}, isCategoryMatch: ${isCategoryMatch}, isDateMatch: ${isDateMatch}`);
+            return isCategoryMatch && isDateMatch;
+          });
+
+          spent = filteredBills.reduce((acc, bill) => acc + parseFloat(bill.amount?.toString() || '0'), 0);
+          console.log(`[BudgetCalculator] ${budget.category} - filtered bills count: ${filteredBills.length}, total spent: ${spent}`);
         } else {
           // Fallback to original DB query if no bills provided
           let query = supabase
             .from('bills')
-            .select('amount')
+            .select('*')
             .eq('user_id', userId)
             .eq('category', budget.category);
 
@@ -63,6 +92,7 @@ export class BudgetCalculator {
             continue;
           }
 
+          console.log(`[BudgetCalculator] ${budget.category} - DB bills count: ${bills?.length || 0}`);
           spent = bills?.reduce((acc, bill) => acc + parseFloat(bill.amount?.toString() || '0'), 0) || 0;
         }
 
@@ -77,6 +107,7 @@ export class BudgetCalculator {
         });
       }
 
+      console.log('[BudgetCalculator] Final results:', results);
       return results;
     } catch (error) {
       console.error('Error calculating category spending:', error);
@@ -90,8 +121,21 @@ export class BudgetCalculator {
   static async getCategorySpending(userId: string, budget: Budget): Promise<number> {
     if (!budget) return 0;
 
-    const start = budget.start_date ? new Date(budget.start_date) : this.getMonthlyDateRange().startDate;
-    const end = budget.end_date ? new Date(budget.end_date) : this.getMonthlyDateRange().endDate;
+    const getUTCDate = (dateStr: string | undefined): Date => {
+      if (!dateStr) return new Date(0);
+      const date = new Date(dateStr);
+      return new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds(),
+        date.getUTCMilliseconds()
+      ));
+    };
+    const start = budget.start_date ? getUTCDate(budget.start_date) : this.getMonthlyDateRange().startDate;
+    const end = budget.end_date ? getUTCDate(budget.end_date) : this.getMonthlyDateRange().endDate;
 
     const { data, error } = await supabase
       .from('bills')
@@ -158,13 +202,14 @@ export class BudgetCalculator {
   }
 
   /**
-   * Get monthly date range
+   * Get monthly date range in UTC
    */
   static getMonthlyDateRange(): { startDate: Date; endDate: Date } {
     const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const startDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0));
+    const endDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
 
+    console.log('[BudgetCalculator] Monthly date range (UTC):', { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
     return { startDate, endDate };
   }
 

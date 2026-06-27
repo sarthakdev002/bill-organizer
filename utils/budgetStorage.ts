@@ -5,6 +5,7 @@ export const BudgetStorage = {
   // Budget operations
   async getBudgets(userId: string): Promise<Budget[]> {
     try {
+      console.log('[BudgetStorage] Getting budgets for userId:', userId);
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
@@ -16,13 +17,16 @@ export const BudgetStorage = {
         return [];
       }
 
-      return data.map((budget: any) => ({
+      const budgets = data.map((budget: any) => ({
         ...budget,
         created_at: new Date(budget.created_at).toISOString(),
         updated_at: new Date(budget.updated_at).toISOString(),
         start_date: budget.start_date ? new Date(budget.start_date).toISOString() : undefined,
         end_date: budget.end_date ? new Date(budget.end_date).toISOString() : undefined,
       }));
+
+      console.log('[BudgetStorage] Loaded budgets:', budgets);
+      return budgets;
     } catch (error) {
       console.error('Error getting budgets:', error);
       return [];
