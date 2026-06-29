@@ -24,14 +24,14 @@ const { width } = Dimensions.get('window');
 const BACKEND_BASE_URL = Config.BACKEND_URL;
 
 const CATEGORIES = [
-    { key: 'Electronics', icon: '[E]', label: 'Electronics' },
-    { key: 'Groceries', icon: '[G]', label: 'Groceries' },
-    { key: 'Travel', icon: '[T]', label: 'Travel' },
-    { key: 'Salon & Beauty', icon: '[S]', label: 'Salon' },
-    { key: 'Repairs', icon: '[R]', label: 'Repairs' },
-    { key: 'Food', icon: '[F]', label: 'Food' },
-    { key: 'Medical', icon: '[M]', label: 'Medical' },
-    { key: 'Fashion', icon: '[C]', label: 'Fashion' },
+    { key: 'Electronics', icon: '🔌', label: 'Electronics' },
+    { key: 'Groceries', icon: '🛒', label: 'Groceries' },
+    { key: 'Travel', icon: '✈️', label: 'Travel' },
+    { key: 'Salon & Beauty', icon: '💅', label: 'Salon' },
+    { key: 'Repairs', icon: '🔨', label: 'Repairs' },
+    { key: 'Food', icon: '🍔', label: 'Food' },
+    { key: 'Medical', icon: '💊', label: 'Medical' },
+    { key: 'Fashion', icon: '👕', label: 'Fashion' },
 ];
 
 const QUICK_SEARCHES: Record<string, string[]> = {
